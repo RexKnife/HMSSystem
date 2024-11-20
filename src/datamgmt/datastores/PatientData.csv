@@ -1,0 +1,5 @@
+UserID,Name,DateOfBirth,Gender,BloodType,ContactInfo,Password
+P1002,Bob Stone,1975-11-22,MALE,B+,bob.stone@example.com,hU1ZDp4zr15PfNydB6j+Qpg5s5sECx4ZYOxj1Gx2PcI=
+P1003,Charlie White,1990-07-08,MALE,O-,charlie.white@example.com,hU1ZDp4zr15PfNydB6j+Qpg5s5sECx4ZYOxj1Gx2PcI=
+P1006,Terry,2002-02-04,MALE,AB+,terry@gmail.com,TFvusTngs6ffVhOkgiAjbcfERHQgc9Jor8hXZtgSGlU=
+P1001,Alicia Lim,2001-12-10,FEMALE,A+,alicialim@gmail.com,DjvmKQQXDO7YeHo3R7qaYtmMyT0E+/T8+CUxsYsHabc=
