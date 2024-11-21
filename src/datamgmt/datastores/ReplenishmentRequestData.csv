@@ -18,3 +18,4 @@ Aspirin,200,FULFILLED,PH001,false
 Albuterol,200,FULFILLED,PH001,true
 Ibuprofen,300,FULFILLED,PH004,false
 Ibudredp,2200,FULFILLED,PH005,true
+Ibuprofen,200,PENDING,PH006,false

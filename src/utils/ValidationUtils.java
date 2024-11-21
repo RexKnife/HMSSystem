@@ -25,14 +25,32 @@ public class ValidationUtils {
      * @return {@code true} if the date and time are valid for the doctor's slots, otherwise {@code false}
      */
     public static boolean isValidAppointmentTime(List<AppointmentSlot> doctorSlots, LocalDate date, LocalTime time) {
-        WorkingDay appointmentDay = WorkingDay.valueOf(date.getDayOfWeek().name());
-
-        return doctorSlots.stream().anyMatch(slot ->
-                slot.getWorkingDays().contains(appointmentDay) &&
-                !time.isBefore(slot.getStartTime()) &&
-                !time.isAfter(slot.getEndTime())
-        );
+        try {
+            // Combine date and time into a LocalDateTime
+            LocalDateTime appointmentDateTime = LocalDateTime.of(date, time);
+    
+            // Check if the date and time are in the future
+            if (!appointmentDateTime.isAfter(LocalDateTime.now())) {
+                return false;
+            }
+    
+            // Get the working day corresponding to the appointment date
+            WorkingDay appointmentDay = WorkingDay.valueOf(date.getDayOfWeek().name());
+    
+            // Validate that the time falls within one of the doctor's slots for that working day
+            return doctorSlots.stream().anyMatch(slot ->
+                    slot.getWorkingDays().contains(appointmentDay) &&
+                    !time.isBefore(slot.getStartTime()) &&
+                    !time.isAfter(slot.getEndTime())
+            );
+        } catch (Exception e) {
+            System.err.println("Error validating appointment time: " + e.getMessage());
+            return false;
+        }
     }
+    
+    
+    
     /** 
      * Validates if a string is null or empty.
      *
@@ -145,8 +163,8 @@ public class ValidationUtils {
      * @throws IllegalArgumentException if the age is not between 18 and 100
      */
     public static void validateAge(int age) {
-        if (age < 18 || age > 100) {
-            throw new IllegalArgumentException("Age must be between 18 and 100.");
+        if (age < 18 || age > 120) {
+            throw new IllegalArgumentException("Age must be between 18 and 120.");
         }
     }
     private static final String EMAIL_REGEX = "^[A-Za-z0-9+_.-]+@[A-Za-z.-]+\\.[A-Za-z]{2,}$";
