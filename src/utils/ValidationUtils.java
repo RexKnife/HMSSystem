@@ -9,12 +9,31 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Pattern;
 
+import utils.appointments.appointmentslots.AppointmentSlot;
+import utils.enums.WorkingDay;
+
 /**
  * Utility class for validating strings, dates, times, and general objects.
  */
 public class ValidationUtils {
-
     /**
+     * Validates if the given date and time are within the working slots of a doctor.
+     *
+     * @param doctorSlots the list of {@link AppointmentSlot} for the doctor
+     * @param date        the appointment date to validate
+     * @param time        the appointment time to validate
+     * @return {@code true} if the date and time are valid for the doctor's slots, otherwise {@code false}
+     */
+    public static boolean isValidAppointmentTime(List<AppointmentSlot> doctorSlots, LocalDate date, LocalTime time) {
+        WorkingDay appointmentDay = WorkingDay.valueOf(date.getDayOfWeek().name());
+
+        return doctorSlots.stream().anyMatch(slot ->
+                slot.getWorkingDays().contains(appointmentDay) &&
+                !time.isBefore(slot.getStartTime()) &&
+                !time.isAfter(slot.getEndTime())
+        );
+    }
+    /** 
      * Validates if a string is null or empty.
      *
      * @param value the string to validate

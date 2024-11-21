@@ -5,6 +5,7 @@ import datamgmt.retrievers.AppointmentSlotData;
 import datamgmt.retrievers.MedicalRecordData;
 import datamgmt.retrievers.StaffData;
 import users.ui.BaseUI;
+import utils.ValidationUtils;
 import utils.appointments.*;
 import utils.appointments.appointmentslots.AppointmentSlot;
 import utils.enums.AppointmentStatus;
@@ -180,22 +181,78 @@ public class PatientUI extends BaseUI {
      * a date, and an available time slot.
      */
     public void scheduleAppointment(Scanner scanner) {
-        System.out.println("\n--- Schedule an Appointment ---");
-
-        AppointmentScheduler scheduler = new AppointmentScheduler(new AppointmentData(), new AppointmentSlotData());
-
-        try {
-            scheduler.scheduleAppointment(scanner, this.patient.getUserID()); // Delegates the scheduling to the AppointmentScheduler
-        } catch (Exception e) {
-            System.err.println("Error scheduling appointment: " + e.getMessage());
+        System.out.println("\n--- Schedule a New Appointment ---");
+    
+        // Prompt the user for the doctor ID
+        System.out.print("Enter Doctor ID (e.g., D001) or leave blank to cancel: ");
+        String doctorID = scanner.nextLine().trim();
+        if (doctorID.isEmpty()) {
+            System.out.println("Operation cancelled.");
+            return;
+        }
+    
+        // Load the doctor's slots
+        AppointmentSlotData slotData = new AppointmentSlotData();
+        slotData.reloadData();
+    
+        List<AppointmentSlot> doctorSlots = slotData.getAllSlots()
+                .stream()
+                .filter(slot -> slot.getDoctorID().equalsIgnoreCase(doctorID))
+                .collect(Collectors.toList());
+    
+        if (doctorSlots.isEmpty()) {
+            System.out.println("No availability found for the specified doctor.");
+            return;
+        }
+    
+        System.out.println("\nDoctor's Availability:");
+        for (AppointmentSlot slot : doctorSlots) {
+            System.out.printf("Working Days: %s, Time: %s to %s%n",
+                    slot.getWorkingDays(),
+                    slot.getStartTime(),
+                    slot.getEndTime());
+        }
+    
+        // Get validated date and time
+        while (true) {
+            try {
+                System.out.print("Enter Appointment Date (dd/MM/yyyy) or leave blank to cancel: ");
+                String dateInput = scanner.nextLine().trim();
+                if (dateInput.isEmpty()) {
+                    System.out.println("Operation cancelled.");
+                    return;
+                }
+    
+                System.out.print("Enter Appointment Time (HH:mm) or leave blank to cancel: ");
+                String timeInput = scanner.nextLine().trim();
+                if (timeInput.isEmpty()) {
+                    System.out.println("Operation cancelled.");
+                    return;
+                }
+    
+                LocalDate date = LocalDate.parse(dateInput, DateTimeFormatter.ofPattern("dd/MM/yyyy"));
+                LocalTime time = LocalTime.parse(timeInput, DateTimeFormatter.ofPattern("HH:mm"));
+    
+                if (!ValidationUtils.isValidAppointmentTime(doctorSlots, date, time) && !ValidationUtils.isFutureDate(dateInput, timeInput, "dd/MM/yyyy", "HH:mm")) {
+                    System.out.println("The selected time is not valid. Please choose another time.");
+                    continue;
+                }
+    
+                // Schedule the appointment
+                appointmentCRUD.scheduleAppointment(patient.getUserID(), doctorID, dateInput, timeInput, AppointmentStatus.PENDING);
+                System.out.println("Appointment scheduled successfully.");
+                break;
+            } catch (Exception e) {
+                System.out.println("Invalid input. Please try again.");
+            }
         }
     }
-
+    
 
     private void rescheduleAppointment(Scanner scanner) {
         displayMenuHeader("RESCHEDULE AN APPOINTMENT");
     
-        // Retrieve all appointments for rescheduling
+        // Retrieve appointments eligible for rescheduling
         List<Appointment> appointments = appointmentCRUD.getAppointments(patient.getUserID(), null, null)
                 .stream()
                 .filter(appt -> appt.getStatus() == AppointmentStatus.PENDING || appt.getStatus() == AppointmentStatus.ACCEPTED)
@@ -206,60 +263,97 @@ public class PatientUI extends BaseUI {
             return;
         }
     
-        // Use the new method to display appointments
-        displayAppointments(appointments);
+        // Display appointments with numbering
+        for (int i = 0; i < appointments.size(); i++) {
+            Appointment appointment = appointments.get(i);
+            String doctorName = staffData.findUserById(appointment.getDoctorID()).getName();
+            System.out.printf("%d. %-15s %-30s %-12s %-8s %-10s%n",
+                    i + 1,
+                    appointment.getPatientID(),
+                    doctorName,
+                    appointment.getDate(),
+                    appointment.getTime(),
+                    appointment.getStatus());
+        }
     
         // Prompt the user to select an appointment
-        System.out.print("\nSelect the appointment to reschedule: ");
-        int selection = scanner.nextInt() - 1;
-        scanner.nextLine(); // Clear buffer
-    
-        if (selection < 0 || selection >= appointments.size()) {
-            System.out.println("Invalid selection.");
+        System.out.print("\nSelect the appointment to reschedule (Enter number or leave blank to cancel): ");
+        String selection = scanner.nextLine().trim();
+        if (selection.isEmpty()) {
+            System.out.println("Operation cancelled.");
             return;
         }
     
-        Appointment selectedAppointment = appointments.get(selection);
+        int selectedIndex;
+        try {
+            selectedIndex = Integer.parseInt(selection) - 1;
+            if (selectedIndex < 0 || selectedIndex >= appointments.size()) {
+                throw new NumberFormatException("Invalid index");
+            }
+        } catch (NumberFormatException e) {
+            System.out.println("Invalid selection. Operation cancelled.");
+            return;
+        }
     
-        // Get new date and time
+        Appointment selectedAppointment = appointments.get(selectedIndex);
+    
+        // Load the doctor's slots
+        AppointmentSlotData slotData = new AppointmentSlotData();
+        slotData.reloadData();
+    
+        List<AppointmentSlot> doctorSlots = slotData.getAllSlots()
+                .stream()
+                .filter(slot -> slot.getDoctorID().equals(selectedAppointment.getDoctorID()))
+                .collect(Collectors.toList());
+    
+        if (doctorSlots.isEmpty()) {
+            System.out.println("No available slots for the selected doctor.");
+            return;
+        }
+    
+        // Get new date and time with validation
         while (true) {
             try {
-                System.out.print("Enter new date (dd/MM/yyyy): ");
-                String newDate = scanner.nextLine().trim();
-                System.out.print("Enter new time (HH:mm): ");
-                String newTime = scanner.nextLine().trim();
+                System.out.print("Enter new date (dd/MM/yyyy) or leave blank to cancel: ");
+                String newDateInput = scanner.nextLine().trim();
+                if (newDateInput.isEmpty()) {
+                    System.out.println("Operation cancelled.");
+                    return;
+                }
     
-                // Validate the new date and time
-                LocalDate rescheduleDate = LocalDate.parse(newDate, DateTimeFormatter.ofPattern("dd/MM/yyyy"));
-                LocalTime rescheduleTime = LocalTime.parse(newTime, DateTimeFormatter.ofPattern("HH:mm"));
+                System.out.print("Enter new time (HH:mm) or leave blank to cancel: ");
+                String newTimeInput = scanner.nextLine().trim();
+                if (newTimeInput.isEmpty()) {
+                    System.out.println("Operation cancelled.");
+                    return;
+                }
     
-                if (rescheduleDate.isBefore(LocalDate.now()) ||
-                        (rescheduleDate.isEqual(LocalDate.now()) && rescheduleTime.isBefore(LocalTime.now()))) {
-                    System.out.println("Error: The selected date and time have already passed. Please choose another slot.");
+                LocalDate newDate = LocalDate.parse(newDateInput, DateTimeFormatter.ofPattern("dd/MM/yyyy"));
+                LocalTime newTime = LocalTime.parse(newTimeInput, DateTimeFormatter.ofPattern("HH:mm"));
+    
+                if (!ValidationUtils.isValidAppointmentTime(doctorSlots, newDate, newTime)) {
+                    System.out.println("The selected time is not valid. Please choose another time.");
                     continue;
                 }
     
-                // Reschedule the appointment
-                selectedAppointment.setDate(newDate);
-                selectedAppointment.setTime(newTime);
-                selectedAppointment.updateStatus(AppointmentStatus.PENDING); // Revert status to pending
+                // Update the appointment and persist changes
+                selectedAppointment.setDate(newDateInput);
+                selectedAppointment.setTime(newTimeInput);
+                selectedAppointment.updateStatus(AppointmentStatus.PENDING);
     
-                appointmentCRUD.rescheduleAppointment(selectedAppointment.getAppointmentID(), newDate, newTime);
-                System.out.println("Appointment rescheduled successfully. Its status has been set back to PENDING.");
+                appointmentCRUD.updateAppointment(selectedAppointment);
+                System.out.println("Appointment rescheduled successfully.");
                 break;
-    
             } catch (Exception e) {
                 System.out.println("Invalid input. Please try again.");
             }
         }
     }
-    
-
 
     private void cancelAppointment(Scanner scanner) {
         displayMenuHeader("CANCEL AN APPOINTMENT");
     
-        // Retrieve appointments with PENDING or CONFIRMED status
+        // Retrieve appointments with PENDING or ACCEPTED status
         List<Appointment> appointments = appointmentCRUD.getAppointments(patient.getUserID(), null, null)
                 .stream()
                 .filter(appt -> appt.getStatus() == AppointmentStatus.PENDING || appt.getStatus() == AppointmentStatus.ACCEPTED)
@@ -270,26 +364,45 @@ public class PatientUI extends BaseUI {
             return;
         }
     
-        // Use the new method to display appointments
-        displayAppointments(appointments);
+        // Display appointments with numbers
+        System.out.println("Available Appointments to Cancel:");
+        for (int i = 0; i < appointments.size(); i++) {
+            Appointment appointment = appointments.get(i);
+            String doctorName = staffData.findUserById(appointment.getDoctorID()).getName();
+            System.out.printf("%d. %s (Doctor: %s, Date: %s, Time: %s, Status: %s)%n",
+                    i + 1, appointment.getAppointmentID(), doctorName, appointment.getDate(),
+                    appointment.getTime(), appointment.getStatus());
+        }
     
         // Prompt the user to select an appointment
-        System.out.print("\nSelect the appointment to cancel: ");
-        int selection = scanner.nextInt() - 1;
-        scanner.nextLine(); // Clear buffer
+        System.out.print("\nEnter the number of the appointment to cancel (or press Enter to exit): ");
+        String input = scanner.nextLine().trim();
     
-        if (selection < 0 || selection >= appointments.size()) {
-            System.out.println("Invalid selection.");
+        // Allow user to exit
+        if (input.isEmpty()) {
+            System.out.println("Operation cancelled.");
             return;
         }
     
-        Appointment selectedAppointment = appointments.get(selection);
+        try {
+            int selection = Integer.parseInt(input) - 1;
     
-        // Cancel the selected appointment
-        appointmentCRUD.cancelAppointment(selectedAppointment.getAppointmentID());
-        System.out.println("Appointment cancelled successfully.");
+            if (selection < 0 || selection >= appointments.size()) {
+                System.out.println("Invalid selection. Please try again.");
+                return;
+            }
+    
+            Appointment selectedAppointment = appointments.get(selection);
+    
+            // Cancel the selected appointment
+            appointmentCRUD.cancelAppointment(selectedAppointment.getAppointmentID());
+            System.out.println("Appointment cancelled successfully.");
+    
+        } catch (NumberFormatException e) {
+            System.out.println("Invalid input. Please enter a valid number.");
+        }
     }
-    
+        
     
     private void displayAppointments(List<Appointment> appointments) {
         if (appointments.isEmpty()) {
@@ -351,14 +464,17 @@ public class PatientUI extends BaseUI {
     
         // Display header
         System.out.printf(
-                "%-15s %-25s %-12s %-8s %-10s %-30s %-30s%n",
+                "%-15s %-25s %-12s %-8s %-10s %-50s %-50s%n",
                 "Patient ID", "Doctor Name", "Date", "Time", "Status", "Consultation Notes", "Prescriptions"
         );
-        System.out.println("=".repeat(130));
+        System.out.println("=".repeat(170));
     
         for (Appointment appointment : appointments) {
-            // Retrieve doctor's name
-            String doctorName = staffData.findUserById(appointment.getDoctorID()).getName();
+            // Retrieve doctor's name or provide a fallback
+            String doctorName = "Unknown";
+            if (staffData.findUserById(appointment.getDoctorID()) != null) {
+                doctorName = staffData.findUserById(appointment.getDoctorID()).getName();
+            }
     
             // Extract OutcomeRecord details
             String consultationNotes = "N/A";
@@ -367,10 +483,10 @@ public class PatientUI extends BaseUI {
             if (appointment.getOutcomeRecord() != null) {
                 OutcomeRecord outcome = appointment.getOutcomeRecord();
     
-                // Display consultation notes if available
+                // Retrieve consultation notes, if available
                 consultationNotes = outcome.getConsultationNotes().isEmpty() ? "N/A" : outcome.getConsultationNotes();
     
-                // Format prescriptions if available
+                // Format prescriptions, if available
                 if (!outcome.getPrescriptions().isEmpty()) {
                     prescriptions = outcome.getPrescriptions().stream()
                             .map(p -> String.format("%s (%d, %s)",
@@ -383,7 +499,7 @@ public class PatientUI extends BaseUI {
     
             // Print appointment details
             System.out.printf(
-                    "%-15s %-25s %-12s %-8s %-10s %-30s %-30s%n",
+                    "%-15s %-25s %-12s %-8s %-10s %-50s %-50s%n",
                     appointment.getPatientID(),
                     doctorName,
                     appointment.getDate(),
@@ -394,8 +510,9 @@ public class PatientUI extends BaseUI {
             );
         }
     
-        System.out.println("=".repeat(130));
+        System.out.println("=".repeat(170));
     }
+    
     
     
     

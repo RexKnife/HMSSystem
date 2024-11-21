@@ -3,7 +3,7 @@ package datamgmt.retrievers;
 import utils.appointments.Appointment;
 import utils.enums.AppointmentStatus;
 import utils.env;
-import utils.medicalrecords.*;
+import utils.medicalrecords.OutcomeRecord;
 
 import java.io.*;
 import java.time.LocalDate;
@@ -30,16 +30,16 @@ public class AppointmentData extends BaseDataHandler<Appointment> {
 
     /**
      * Imports appointment data from the file path specified in the environment.
-     * Skips the header line.
+     * Ensures proper deserialization of OutcomeRecords and Prescriptions.
      */
     public void importData() {
         List<Appointment> appointments = new ArrayList<>();
         try (BufferedReader reader = new BufferedReader(new FileReader(filePath))) {
             String line;
-            boolean isHeader = true; // Flag to skip the header
+            boolean isHeader = true; // Skip header line
             while ((line = reader.readLine()) != null) {
                 if (isHeader) {
-                    isHeader = false; // Skip the first line (header)
+                    isHeader = false;
                     continue;
                 }
                 try {
@@ -55,10 +55,9 @@ public class AppointmentData extends BaseDataHandler<Appointment> {
             System.err.println("Error reading appointment data: " + e.getMessage());
         }
 
-        // Replace in-memory data only after successful parsing
         dataList.clear();
         dataList.addAll(appointments);
-        processOutdatedAppointments(); // Process outdated appointments after loading
+        processOutdatedAppointments(); // Handle outdated appointments
     }
 
     /**
@@ -90,44 +89,40 @@ public class AppointmentData extends BaseDataHandler<Appointment> {
     }
 
     /**
-     * Saves appointment data to the file in an atomic manner.
-     * Uses a temporary file to ensure data integrity.
+     * Writes appointment data directly to the file without using a temporary file.
+     * Updates the file with complete OutcomeRecord details.
      */
-    public void writeData() throws IOException {
-        try (BufferedWriter writer = new BufferedWriter(new FileWriter(filePath))) {
-            // Write the header
+    public void writeData() {
+        try (BufferedWriter writer = new BufferedWriter(new FileWriter(filePath, false))) {
+            // Write header
             writer.write(getHeader());
             writer.newLine();
-    
+
             // Write each appointment as a CSV row
             for (Appointment appointment : dataList) {
-                writer.write(formatItem(appointment)); // Use the fixed formatItem method
+                writer.write(formatItem(appointment));
                 writer.newLine();
             }
         } catch (IOException e) {
             System.err.println("Error writing appointment data: " + e.getMessage());
-            throw e;
         }
     }
-    
+    /**
+     * Retrieves the in-memory list of appointments.
+     *
+     * @return the list of Appointment objects (modifiable by the caller)
+     */
+    public List<Appointment> getAppointments() {
+        return dataList; // Directly return the in-memory list
+    }
 
     /**
      * Reloads the appointment data by clearing the in-memory list and re-importing it.
      */
     public void reloadData() {
-        clearData();
-        importData();
+        clearData(); // Clear existing data
+        importData(); // Reload from the CSV file
     }
-
-    /**
-     * Retrieves all appointments.
-     *
-     * @return a list of all Appointment objects
-     */
-    public List<Appointment> getAppointments() {
-        return new ArrayList<>(dataList);
-    }
-
     @Override
     protected Appointment parseLine(String line) {
         try {
@@ -145,39 +140,13 @@ public class AppointmentData extends BaseDataHandler<Appointment> {
 
             OutcomeRecord outcomeRecord = null;
             if (parts.length > 6 && !parts[6].equals("-")) {
-                outcomeRecord = parseOutcomeRecord(parts[6].trim());
+                outcomeRecord = OutcomeRecord.fromCSV(parts[6].trim());
             }
 
             return new Appointment(appointmentID, patientID, doctorID, date, time, status, outcomeRecord);
 
         } catch (Exception e) {
             System.err.println("Error parsing appointment data: " + line + " - " + e.getMessage());
-            return null;
-        }
-    }
-
-    private OutcomeRecord parseOutcomeRecord(String outcomeData) {
-        try {
-            String[] parts = outcomeData.split(",", 3);
-            String dateOfAppointment = parts[0].trim();
-            String serviceType = parts[1].trim();
-            String consultationNotes = parts[2].trim();
-
-            OutcomeRecord outcomeRecord = new OutcomeRecord(dateOfAppointment, serviceType, consultationNotes);
-
-            if (outcomeData.contains("[") && outcomeData.contains("]")) {
-                String prescriptionsData = outcomeData.substring(outcomeData.indexOf("[") + 1, outcomeData.indexOf("]")).trim();
-                if (!prescriptionsData.isEmpty()) {
-                    String[] prescriptionsArray = prescriptionsData.split(";");
-                    for (String prescriptionCSV : prescriptionsArray) {
-                        outcomeRecord.addPrescription(Prescription.fromCSV(prescriptionCSV.trim()));
-                    }
-                }
-            }
-            return outcomeRecord;
-
-        } catch (Exception e) {
-            System.err.println("Error parsing outcome record: " + outcomeData + " - " + e.getMessage());
             return null;
         }
     }
@@ -195,10 +164,8 @@ public class AppointmentData extends BaseDataHandler<Appointment> {
                 appointment.getDate(),
                 appointment.getTime(),
                 appointment.getStatus().name(),
-                outcomeRecord // Ensure only one serialization
-        );
+                outcomeRecord);
     }
-
 
     @Override
     protected String getHeader() {

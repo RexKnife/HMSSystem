@@ -1,0 +1,7 @@
+{
+    "java.project.sourcePaths": [
+        "src",
+        "HMSSystem/src"
+    ],
+    "java.configuration.updateBuildConfiguration": "interactive"
+}
