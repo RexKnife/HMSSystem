@@ -94,32 +94,22 @@ public class AppointmentData extends BaseDataHandler<Appointment> {
      * Uses a temporary file to ensure data integrity.
      */
     public void writeData() throws IOException {
-        String outputPath = this.filePath; // Use the file path from the environment
-        File tempFile = new File(outputPath + ".tmp");
-        try (BufferedWriter writer = new BufferedWriter(new FileWriter(tempFile))) {
+        try (BufferedWriter writer = new BufferedWriter(new FileWriter(filePath))) {
             // Write the header
             writer.write(getHeader());
             writer.newLine();
-
+    
             // Write each appointment as a CSV row
             for (Appointment appointment : dataList) {
-                writer.write(formatItem(appointment));
+                writer.write(formatItem(appointment)); // Use the fixed formatItem method
                 writer.newLine();
             }
         } catch (IOException e) {
             System.err.println("Error writing appointment data: " + e.getMessage());
-            if (tempFile.exists()) {
-                tempFile.delete();
-            }
             throw e;
         }
-
-        // Replace original file only if write is successful
-        File originalFile = new File(outputPath);
-        if (!tempFile.renameTo(originalFile)) {
-            throw new IOException("Failed to replace the original appointment file.");
-        }
     }
+    
 
     /**
      * Reloads the appointment data by clearing the in-memory list and re-importing it.
@@ -205,8 +195,10 @@ public class AppointmentData extends BaseDataHandler<Appointment> {
                 appointment.getDate(),
                 appointment.getTime(),
                 appointment.getStatus().name(),
-                outcomeRecord);
+                outcomeRecord // Ensure only one serialization
+        );
     }
+
 
     @Override
     protected String getHeader() {

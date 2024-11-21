@@ -86,17 +86,25 @@ public class OutcomeRecord implements CSVSerializable {
     @Override
     public String toCSV() {
         StringBuilder csvBuilder = new StringBuilder();
-        csvBuilder.append(dateOfAppointment).append(",");
-        csvBuilder.append(serviceType).append(",");
-        csvBuilder.append(consultationNotes).append(",");
-        csvBuilder.append("[");
-        for (int i = 0; i < prescriptions.size(); i++) {
-            if (i > 0) csvBuilder.append(";");
-            csvBuilder.append(prescriptions.get(i).toCSV());
+        csvBuilder.append(dateOfAppointment).append(","); // Date of appointment
+        csvBuilder.append(serviceType).append(",");       // Service type
+        csvBuilder.append(consultationNotes).append(","); // Consultation notes
+
+        // Serialize prescriptions
+        if (!prescriptions.isEmpty()) {
+            csvBuilder.append("[");
+            for (int i = 0; i < prescriptions.size(); i++) {
+                if (i > 0) csvBuilder.append(";");
+                csvBuilder.append(prescriptions.get(i).toCSV());
+            }
+            csvBuilder.append("]");
+        } else {
+            csvBuilder.append("[]"); // Empty list indicator
         }
-        csvBuilder.append("]");
+
         return csvBuilder.toString();
     }
+
 
     /**
      * Deserializes a CSV string to an OutcomeRecord object.
