@@ -1,7 +1,21 @@
 PatientID;Diagnoses;Treatments
-P1002;Hypothyroidism,low potassium,high cholestrol,high blood pressure,diabetes,Likes Chicken;Oral Medications,Analgesics,Antidepressants,Antibiotics,Decrease Chicken Intake
-P1003;klsdk,test,test2,euefuefh,ef,stomach issues,blood issues,Hypertension (High Blood Pressure),Atrial Fibrillation,Myocardial Infarction (Heart Attack);uiilklk,pills,healthy food,Medication,Vaccinations,Physical therapy
-P1001;Hypertension - cured,Diabetes Mellitus (Type 2),Asthma,Chronic Obstructive Pulmonary Disease (COPD),Osteoarthritis,Hysteria;Antihypertensive Medications for Hypertension,Insulin or Oral Hypoglycemics for Diabetes Mellitus (Type 2),Inhalers and Steroids for Asthma,Bronchodilators and Steroids for COPD,Pain Relief and Physical Therapy for Osteoarthritis
-P1005;Type 2 Diabetes,Asthma;Peak flow measurement,Antibiotics
+P1002;Hypothyroidism, Low Potassium, High Cholesterol, High Blood Pressure, Type 2 Diabetes;Thyroid Hormone Replacement, Potassium Supplements, Statins for Cholesterol, Antihypertensive Medications, Insulin Therapy
+P1003;Hypertension, Atrial Fibrillation, Myocardial Infarction;Antihypertensive Medications, Blood Thinners, Post-Heart Attack Care
+P1001;Hypertension (Cured), Diabetes Mellitus (Type 2), Asthma, Osteoarthritis;Insulin Therapy, Inhalers and Steroids, Pain Relief Medication, Physical Therapy
+P1005;Asthma, Seasonal Allergies;Inhalers, Antihistamines
 P1008;;
-P1009;Tuberculosis;Antibiotics
+P1009;Tuberculosis;Antibiotics (6-Month Course)
+P1010;Chronic Kidney Disease, Anemia;Dialysis, Iron Supplements
+P1011;Type 1 Diabetes, Vitamin D Deficiency;Insulin Therapy, Vitamin D Supplements
+P1012;Migraine, Tension Headache;Pain Relievers, Lifestyle Adjustments
+P1013;Gastritis, Acid Reflux;Proton Pump Inhibitors, Dietary Modifications
+P1014;Depression, Anxiety;Antidepressants, Cognitive Behavioral Therapy
+P1015;Hypertension, High Cholesterol;Lifestyle Modifications, Antihypertensive Medications, Statins
+P1016;;
+P1017;Obesity, Sleep Apnea;Weight Management Program, CPAP Therapy
+P1018;Chronic Fatigue Syndrome, Fibromyalgia;Pain Relievers, Physical Therapy
+P1019;Eczema, Psoriasis;Topical Steroids, Moisturizers
+P1020;;
+P1021;Bronchitis, Flu;Bronchodilators, Antiviral Medications
+P1022;Osteoporosis, Vitamin B12 Deficiency;Calcium and Vitamin D Supplements, Vitamin B12 Injections
+P1023;;
