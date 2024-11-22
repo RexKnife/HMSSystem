@@ -3,5 +3,8 @@
         "src",
         "HMSSystem/src"
     ],
+    "java.project.referencedLibraries": [
+        "referencedLibraries/*.jar",
+    ],
     "java.configuration.updateBuildConfiguration": "interactive"
 }

@@ -1,2 +1,2 @@
 AppointmentID,PatientID,DoctorID,Date,Time,Status,Outcome Record
-APPT1732258566060,P1008,D001,22/11/2024,15:00,COMPLETED,22/11/2024,Therapy,Prescribed Painkillers,[Ibuprofen,22,DISPENSED]
+APPT1732258566060,P1008,D001,22/11/2024,15:00,COMPLETED,22/11/2024,Therapy,Prescribed Painkillers,[Ibuprofen,22,PENDING]
