@@ -163,7 +163,7 @@ public class ValidationUtils {
      * @throws IllegalArgumentException if the age is not between 18 and 100
      */
     public static void validateAge(int age) {
-        if (age < 18 || age > 120) {
+        if (age <= 0 || age > 120) {
             throw new IllegalArgumentException("Age must be between 18 and 120.");
         }
     }

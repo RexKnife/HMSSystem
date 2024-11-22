@@ -4,6 +4,8 @@ import utils.env;
 import utils.medicalrecords.MedicalRecord;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -42,24 +44,35 @@ public class MedicalRecordData extends BaseDataHandler<MedicalRecord> {
 
     @Override
     protected MedicalRecord parseLine(String line) {
-        String[] parts = line.split(";");
-        if (parts.length < 3) {
+        if (line == null || line.trim().isEmpty()) {
+            System.err.println("Blank line encountered in medical records file.");
+            return null;
+        }
+
+        String[] parts = line.split(";", -1); // Use -1 to handle empty fields
+        if (parts.length != 3) {
             System.err.println("Invalid data format: " + line);
             return null;
         }
-        String patientID = parts[0].trim();
-        String[] diagnoses = parts[1].split(",");
-        String[] treatments = parts[2].split(",");
 
+        String patientID = parts[0].trim();
+        if (patientID.isEmpty()) {
+            System.err.println("Patient ID is missing in the line: " + line);
+            return null;
+        }
+
+        // Handle diagnoses and treatments, defaulting to empty lists if blank
+        List<String> diagnoses = parts[1].trim().isEmpty() ? new ArrayList<>() : Arrays.asList(parts[1].split(","));
+        List<String> treatments = parts[2].trim().isEmpty() ? new ArrayList<>() : Arrays.asList(parts[2].split(","));
+
+        // Create and populate the medical record
         MedicalRecord record = new MedicalRecord(patientID);
-        for (String diagnosis : diagnoses) {
-            record.addDiagnosis(diagnosis.trim());
-        }
-        for (String treatment : treatments) {
-            record.addTreatment(treatment.trim());
-        }
+        record.setDiagnoses(new ArrayList<>(diagnoses.stream().map(String::trim).collect(Collectors.toList())));
+        record.setTreatments(new ArrayList<>(treatments.stream().map(String::trim).collect(Collectors.toList())));
+
         return record;
     }
+
 
     @Override
     protected String formatItem(MedicalRecord record) {
@@ -134,5 +147,32 @@ public class MedicalRecordData extends BaseDataHandler<MedicalRecord> {
         }
         System.out.println("Medical Records:");
         records.forEach(record -> System.out.println(record));
+    }
+    /**
+     * Adds a new medical record to the dataset.
+     *
+     * @param newRecord the medical record to add
+     */
+    public void addMedicalRecord(MedicalRecord newRecord) {
+        if (newRecord == null || newRecord.getPatientID() == null || newRecord.getPatientID().isEmpty()) {
+            throw new IllegalArgumentException("Invalid medical record. Patient ID cannot be null or empty.");
+        }
+
+        try {
+            // Check for existing record
+            MedicalRecord existingRecord = getMedicalRecordByPatientID(newRecord.getPatientID());
+            if (existingRecord != null) {
+                throw new IllegalArgumentException("Medical record for Patient ID " + newRecord.getPatientID() + " already exists.");
+            }
+
+            // Add the new record to in-memory data
+            dataList.add(newRecord);
+
+            // Append the new record to the file
+            appendData(environment.getMedicalRecordPath(), newRecord);
+            System.out.println("Medical record added successfully for Patient ID: " + newRecord.getPatientID());
+        } catch (IOException e) {
+            System.err.println("Error adding medical record: " + e.getMessage());
+        }
     }
 }

@@ -30,7 +30,7 @@ public abstract class Users {
     public Users(String userID, String name, Roles role, Gender gender, int age, String password) {
         ValidationUtils.validateString(name, "Name");
         ValidationUtils.validatePassword(password);
-        ValidationUtils.validateAge(age);
+        if(role != Roles.PATIENT) ValidationUtils.validateAge(age);
 
         this.userID = userID;
         this.name = name;

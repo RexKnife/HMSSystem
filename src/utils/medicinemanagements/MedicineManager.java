@@ -41,7 +41,14 @@ public class MedicineManager {
                     medicine.getLowStockLevelAlert());
         }
     }
-
+    /**
+     * Exposes the underlying MedicineData instance for external usage.
+     *
+     * @return the MedicineData instance
+     */
+    public MedicineData getMedicineData() {
+        return medicineData;
+    }
     /**
      * Searches for a medicine by its name and displays its details.
      *

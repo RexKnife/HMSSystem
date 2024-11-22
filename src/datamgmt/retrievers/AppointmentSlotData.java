@@ -115,6 +115,25 @@ public class AppointmentSlotData extends BaseDataHandler<AppointmentSlot> {
             System.err.println("Error saving appointment slots: " + e.getMessage());
         }
     }
+   /**
+     * Adds a new appointment slot and persists it to the CSV file.
+     *
+     * @param slot the {@link AppointmentSlot} object to add
+     */
+    public void addSlot(AppointmentSlot slot) {
+        if (slot == null) {
+            throw new IllegalArgumentException("Appointment slot cannot be null.");
+        }
+
+        try {
+            // Add slot to the in-memory data list managed by BaseDataHandler
+            dataList.add(slot); // This method ensures the slot is added to the internal list
+            saveAppointmentSlots(); // Save the updated list to the CSV file
+            System.out.println("Appointment slot added successfully.");
+        } catch (Exception e) {
+            System.err.println("Error adding appointment slot: " + e.getMessage());
+        }
+    }
 
     /**
      * Returns the list of all appointment slots.
@@ -124,4 +143,5 @@ public class AppointmentSlotData extends BaseDataHandler<AppointmentSlot> {
     public List<AppointmentSlot> getAllSlots() {
         return getAllData(); // Use the inherited getAllData method from BaseDataHandler
     }
+    
 }

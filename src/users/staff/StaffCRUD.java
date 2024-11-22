@@ -1,12 +1,17 @@
 package users.staff;
 
+import datamgmt.retrievers.AppointmentSlotData;
 import datamgmt.retrievers.StaffData;
 import users.Users;
 import users.usermgmt.PasswordHasher;
+import utils.env;
+import utils.appointments.appointmentslots.AppointmentSlot;
 import utils.enums.Gender;
 import utils.enums.Roles;
+import utils.enums.WorkingDay;
 
 import java.io.IOException;
+import java.time.LocalTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -26,16 +31,21 @@ public class StaffCRUD {
         this.data = data;
         data.reloadData(); // Load the latest staff data
     }
-
-     /** Adds a new staff member with the provided details.
+    /**
+     * Adds a new staff member with the provided details.
      *
      * @param name     the staff member's name
      * @param role     the staff member's role
      * @param gender   the staff member's gender
      * @param age      the staff member's age
-     * @param password the staff member's plaintext password
+     * @param password the staff member's plaintext password (defaulted if left blank)
      */
     public void addStaff(String name, Roles role, Gender gender, int age, String password) {
+        // Use default password if none is provided
+        if (password == null || password.trim().isEmpty()) {
+            password = "defaultPassword";
+        }
+
         // Generate a unique staff ID based on the role
         String staffID = data.generateNextStaffID(role);
 
@@ -46,6 +56,9 @@ public class StaffCRUD {
         switch (role) {
             case DOCTOR:
                 newStaff = new users.staff.doctor.Doctor(staffID, name, gender, age, hashedPassword);
+
+                // Create a default appointment slot for the doctor
+                createDefaultDoctorTimeSlot(staffID);
                 break;
             case ADMINISTRATOR:
                 newStaff = new users.staff.administrator.Administrator(staffID, name, gender, age, hashedPassword);
@@ -59,7 +72,7 @@ public class StaffCRUD {
         }
 
         try {
-            // Add the new staff to in-memory list and persist to the CSV file
+            // Add the new staff to the in-memory list and persist to the CSV file
             data.addStaff(newStaff);
 
             // Log success message
@@ -72,6 +85,37 @@ public class StaffCRUD {
             System.out.println("Failed to add staff: " + e.getMessage());
         }
     }
+
+    /**
+     * Creates a default appointment time slot for doctors and appends it to the CSV.
+     *
+     * @param doctorID the ID of the doctor
+     */
+    private void createDefaultDoctorTimeSlot(String doctorID) {
+        try {
+            env environment = new env();
+            // Default working days and times for the doctor
+            List<WorkingDay> defaultWorkingDays = List.of(
+                    WorkingDay.MONDAY, WorkingDay.TUESDAY, WorkingDay.WEDNESDAY,
+                    WorkingDay.THURSDAY, WorkingDay.FRIDAY);
+
+            LocalTime defaultStartTime = LocalTime.of(9, 0); // 9:00 AM
+            LocalTime defaultEndTime = LocalTime.of(17, 0);  // 5:00 PM
+
+            // Create the default appointment slot
+            AppointmentSlot defaultSlot = new AppointmentSlot(doctorID, defaultStartTime, defaultEndTime, defaultWorkingDays);
+
+            // Save the default slot to the CSV using appendData
+            AppointmentSlotData slotData = new AppointmentSlotData();
+            slotData.importData(); // Ensure the environment and file path are loaded
+            slotData.appendData(environment.getAppointmentSlotDataPath(), defaultSlot);
+
+            System.out.println("Default appointment slot created and saved for doctor: " + doctorID);
+        } catch (Exception e) {
+            System.err.println("Error creating default appointment slot for doctor: " + e.getMessage());
+        }
+    }
+
 
 
     /**

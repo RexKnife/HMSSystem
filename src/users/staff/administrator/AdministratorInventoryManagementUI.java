@@ -25,7 +25,7 @@ public class AdministratorInventoryManagementUI extends BaseUI {
      */
     public AdministratorInventoryManagementUI(MedicineData medicineData, ReplenishmentRequestData replenishmentRequestData, Scanner scanner) {
         this.medicineManager = new MedicineManager(medicineData);
-        this.replenishmentRequestManager = new ReplenishmentRequestManager(replenishmentRequestData);
+        this.replenishmentRequestManager = new ReplenishmentRequestManager(replenishmentRequestData, medicineManager);
         this.scanner = scanner;
     }
 
@@ -81,7 +81,7 @@ public class AdministratorInventoryManagementUI extends BaseUI {
             int choice = getMenuChoice();
 
             if (choice == 1) {
-                replenishmentRequestManager.displayAllRequests();
+                replenishmentRequestManager.displayPendingRequests();
             } else if (choice == 2) {
                 replenishmentRequestManager.managePendingRequests(scanner);
             } else if (choice == 3) {

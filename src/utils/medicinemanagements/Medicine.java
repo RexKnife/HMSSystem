@@ -70,7 +70,20 @@ public class Medicine {
         }
         this.initialStock += quantity;
     }
-
+     /**
+     * Reduces the stock of the medicine by the specified quantity.
+     *
+     * @param quantity the quantity to subtract from the stock
+     */
+    public void reduceStock(int quantity) {
+        if (quantity <= 0) {
+            throw new IllegalArgumentException("Reduction quantity must be positive.");
+        }
+        if (quantity > this.initialStock) {
+            throw new IllegalArgumentException("Insufficient stock to fulfill the request.");
+        }
+        this.initialStock -= quantity;
+    }
     @Override
     public String toString() {
         return String.format("Name: %s, Initial Stock: %d, Low Stock Alert: %d", name, initialStock, lowStockLevelAlert);

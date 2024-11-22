@@ -1,5 +1,7 @@
 PatientID;Diagnoses;Treatments
 P1002;Hypothyroidism,low potassium,high cholestrol,high blood pressure,diabetes,Likes Chicken;Oral Medications,Analgesics,Antidepressants,Antibiotics,Decrease Chicken Intake
 P1003;klsdk,test,test2,euefuefh,ef,stomach issues,blood issues,Hypertension (High Blood Pressure),Atrial Fibrillation,Myocardial Infarction (Heart Attack);uiilklk,pills,healthy food,Medication,Vaccinations,Physical therapy
-P1001;Hypertension (High Blood Pressure),Diabetes Mellitus (Type 2),Asthma,Chronic Obstructive Pulmonary Disease (COPD),Osteoarthritis,shhshs,Hysteria;Antihypertensive Medications for Hypertension,Insulin or Oral Hypoglycemics for Diabetes Mellitus (Type 2),Inhalers and Steroids for Asthma,Bronchodilators and Steroids for COPD,Pain Relief and Physical Therapy for Osteoarthritis,test2,Mental Patient
+P1001;Hypertension - cured,Diabetes Mellitus (Type 2),Asthma,Chronic Obstructive Pulmonary Disease (COPD),Osteoarthritis,Hysteria;Antihypertensive Medications for Hypertension,Insulin or Oral Hypoglycemics for Diabetes Mellitus (Type 2),Inhalers and Steroids for Asthma,Bronchodilators and Steroids for COPD,Pain Relief and Physical Therapy for Osteoarthritis
 P1005;Type 2 Diabetes,Asthma;Peak flow measurement,Antibiotics
+P1008;;
+P1009;Tuberculosis;Antibiotics

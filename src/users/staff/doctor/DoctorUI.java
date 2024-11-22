@@ -11,6 +11,7 @@ import utils.medicalrecords.OutcomeRecord;
 import utils.medicalrecords.Prescription;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
@@ -34,7 +35,7 @@ public class DoctorUI extends BaseUI {
 
     public void displayMenu() {
         Scanner scanner = new Scanner(System.in);
-
+    
         while (true) {
             displayMenuHeader("DOCTOR MAIN MENU");
             displayMenuOption(1, "View Medical Records");
@@ -44,8 +45,9 @@ public class DoctorUI extends BaseUI {
             displayMenuOption(5, "View Upcoming Appointments");
             displayMenuOption(6, "Cancel an Appointment");
             displayMenuOption(7, "Record Appointment Outcome");
-            displayMenuOption(8, "Logout");
-
+            displayMenuOption(8, "View Past Appointment Outcomes"); // New Option
+            displayMenuOption(9, "Logout");
+    
             int choice = getMenuChoice();
             switch (choice) {
                 case 1:
@@ -70,6 +72,9 @@ public class DoctorUI extends BaseUI {
                     recordAppointmentOutcome(scanner);
                     break;
                 case 8:
+                    viewPastAppointmentOutcomes(); // Call the new method
+                    break;
+                case 9:
                     System.out.println("Logging out...");
                     return;
                 default:
@@ -78,12 +83,13 @@ public class DoctorUI extends BaseUI {
             pauseForUser();
         }
     }
+    
 
     private void viewMedicalRecords(Scanner scanner) {
         // Prompt the doctor for the patient ID
         System.out.print("Enter Patient ID to view medical record (or press Enter to return to the main menu): ");
         String patientID = scanner.nextLine().trim();
-    
+        this.medicalRecordData.reloadData();
         // Handle the case where no input is provided
         if (patientID.isEmpty()) {
             System.out.println("Returning to the main menu.");
@@ -131,9 +137,15 @@ public class DoctorUI extends BaseUI {
 
     private void updateMedicalRecords(Scanner scanner) {
         displayMenuHeader("UPDATE MEDICAL RECORDS");
-        System.out.print("Enter Patient ID to update medical record: ");
+        System.out.print("Enter Patient ID to update medical record (or press Enter to return to the main menu): ");
         String patientID = scanner.nextLine().trim();
     
+        // Handle the case where no input is provided
+        if (patientID.isEmpty()) {
+            System.out.println("Returning to the main menu.");
+            return;
+        }
+        this.medicalRecordData.reloadData();
         // Fetch the medical record
         MedicalRecord medicalRecord = this.medicalRecordData.getMedicalRecordByPatientID(patientID);
         if (medicalRecord == null) {
@@ -142,17 +154,90 @@ public class DoctorUI extends BaseUI {
         }
     
         // Display the existing medical record
-        System.out.println("Existing Medical Record:");
-        System.out.println(medicalRecord);
+        System.out.println("\n=====================================");
+        System.out.println("          MEDICAL RECORD");
+        System.out.println("=====================================");
+        System.out.printf("Patient ID: %s%n", medicalRecord.getPatientID());
+    
+        // Display diagnoses
+        System.out.println("\nDiagnoses:");
+        if (medicalRecord.getDiagnoses().isEmpty()) {
+            System.out.println(" - No diagnoses recorded.");
+        } else {
+            for (int i = 0; i < medicalRecord.getDiagnoses().size(); i++) {
+                System.out.printf(" %d. %s%n", i + 1, medicalRecord.getDiagnoses().get(i));
+            }
+        }
+    
+        // Display treatments
+        System.out.println("\nTreatments:");
+        if (medicalRecord.getTreatments().isEmpty()) {
+            System.out.println(" - No treatments recorded.");
+        } else {
+            for (int i = 0; i < medicalRecord.getTreatments().size(); i++) {
+                System.out.printf(" %d. %s%n", i + 1, medicalRecord.getTreatments().get(i));
+            }
+        }
+        System.out.println("=====================================");
+    
+        // Edit or delete an existing diagnosis
+        if (!medicalRecord.getDiagnoses().isEmpty()) {
+            System.out.print("Enter the number of a diagnosis to edit/delete (or press Enter to skip): ");
+            String editDiagnosisInput = scanner.nextLine().trim();
+            if (!editDiagnosisInput.isEmpty()) {
+                try {
+                    int diagnosisIndex = Integer.parseInt(editDiagnosisInput) - 1;
+                    if (diagnosisIndex >= 0 && diagnosisIndex < medicalRecord.getDiagnoses().size()) {
+                        System.out.print("Enter the updated diagnosis (or leave blank to delete): ");
+                        String updatedDiagnosis = scanner.nextLine().trim();
+                        if (updatedDiagnosis.isEmpty()) {
+                            medicalRecord.getDiagnoses().remove(diagnosisIndex);
+                            System.out.println("Diagnosis deleted.");
+                        } else {
+                            medicalRecord.getDiagnoses().set(diagnosisIndex, updatedDiagnosis);
+                            System.out.println("Diagnosis updated.");
+                        }
+                    } else {
+                        System.out.println("Invalid diagnosis number.");
+                    }
+                } catch (NumberFormatException e) {
+                    System.out.println("Invalid input. Skipping diagnosis editing.");
+                }
+            }
+        }
+    
+        // Edit or delete an existing treatment
+        if (!medicalRecord.getTreatments().isEmpty()) {
+            System.out.print("Enter the number of a treatment to edit/delete (or press Enter to skip): ");
+            String editTreatmentInput = scanner.nextLine().trim();
+            if (!editTreatmentInput.isEmpty()) {
+                try {
+                    int treatmentIndex = Integer.parseInt(editTreatmentInput) - 1;
+                    if (treatmentIndex >= 0 && treatmentIndex < medicalRecord.getTreatments().size()) {
+                        System.out.print("Enter the updated treatment (or leave blank to delete): ");
+                        String updatedTreatment = scanner.nextLine().trim();
+                        if (updatedTreatment.isEmpty()) {
+                            medicalRecord.getTreatments().remove(treatmentIndex);
+                            System.out.println("Treatment deleted.");
+                        } else {
+                            medicalRecord.getTreatments().set(treatmentIndex, updatedTreatment);
+                            System.out.println("Treatment updated.");
+                        }
+                    } else {
+                        System.out.println("Invalid treatment number.");
+                    }
+                } catch (NumberFormatException e) {
+                    System.out.println("Invalid input. Skipping treatment editing.");
+                }
+            }
+        }
     
         // Add a new diagnosis
         System.out.print("\nEnter a new diagnosis to add (or press Enter to skip): ");
         String newDiagnosis = scanner.nextLine().trim();
         if (!newDiagnosis.isEmpty()) {
             medicalRecord.addDiagnosis(newDiagnosis);
-            System.out.println("Diagnosis added.");
-        } else {
-            System.out.println("No new diagnosis added.");
+            System.out.println("New diagnosis added.");
         }
     
         // Add a new treatment
@@ -160,19 +245,22 @@ public class DoctorUI extends BaseUI {
         String newTreatment = scanner.nextLine().trim();
         if (!newTreatment.isEmpty()) {
             medicalRecord.addTreatment(newTreatment);
-            System.out.println("Treatment added.");
-        } else {
-            System.out.println("No new treatment added.");
+            System.out.println("New treatment added.");
         }
     
         // Save the updated medical record
         try {
             this.medicalRecordData.updateMedicalRecord(medicalRecord);
+            System.out.println("\n=====================================");
             System.out.println("Medical record updated successfully.");
+            System.out.println("=====================================");
         } catch (Exception e) {
             System.err.println("Error updating medical record: " + e.getMessage());
         }
     }
+    
+    
+    
     
 
     private void viewPersonalSchedule() {
@@ -249,7 +337,50 @@ public class DoctorUI extends BaseUI {
             );
         }
     }
-
+    private void viewPastAppointmentOutcomes() {
+        System.out.println("\n====================================");
+        System.out.println("   View Past Appointment Outcomes   ");
+        System.out.println("====================================");
+    
+        // Retrieve all completed appointments for the doctor
+        List<Appointment> completedAppointments = appointmentCRUD.getAppointments(null, doctorID, AppointmentStatus.COMPLETED);
+    
+        if (completedAppointments.isEmpty()) {
+            System.out.println("No past appointment outcomes found.");
+            return;
+        }
+    
+        // Display outcomes for each completed appointment
+        for (int i = 0; i < completedAppointments.size(); i++) {
+            Appointment appointment = completedAppointments.get(i);
+            OutcomeRecord outcomeRecord = appointment.getOutcomeRecord();
+    
+            // Ensure the appointment has an outcome record
+            if (outcomeRecord != null) {
+                System.out.printf("\n%d. Appointment ID: %s%n", i + 1, appointment.getAppointmentID());
+                System.out.printf("   Patient ID     : %s%n", appointment.getPatientID());
+                System.out.printf("   Date           : %s%n", appointment.getDate());
+                System.out.printf("   Time           : %s%n", appointment.getTime());
+                System.out.printf("   Service Type   : %s%n", outcomeRecord.getServiceType());
+                System.out.printf("   Consultation Notes: %s%n", outcomeRecord.getConsultationNotes());
+                
+                // Display prescribed medications, if any
+                if (!outcomeRecord.getPrescriptions().isEmpty()) {
+                    System.out.println("   Prescriptions:");
+                    for (Prescription prescription : outcomeRecord.getPrescriptions()) {
+                        System.out.printf("     - %s (Qty: %d)%n", prescription.getMedicationName(), prescription.getQuantity());
+                    }
+                } else {
+                    System.out.println("   Prescriptions  : None");
+                }
+    
+                System.out.println("------------------------------------");
+            } else {
+                System.out.printf("\n%d. Appointment ID: %s (No outcome recorded)%n", i + 1, appointment.getAppointmentID());
+            }
+        }
+    }
+    
     private void cancelAppointment(Scanner scanner) {
         List<Appointment> appointments = appointmentCRUD.getAppointments(null, doctorID, AppointmentStatus.ACCEPTED);
 
@@ -341,17 +472,25 @@ public class DoctorUI extends BaseUI {
     }
 
     private boolean hasAppointmentDatePassed(Appointment appointment) {
-        try {
-            DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
-            DateTimeFormatter timeFormatter = DateTimeFormatter.ofPattern("HH:mm");
+    try {
+        // Formatters for parsing the date and time from the appointment
+        DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
+        DateTimeFormatter timeFormatter = DateTimeFormatter.ofPattern("HH:mm");
 
-            LocalDate appointmentDate = LocalDate.parse(appointment.getDate(), dateFormatter);
-            LocalTime appointmentTime = LocalTime.parse(appointment.getTime(), timeFormatter);
+        // Parse the appointment's date and time
+        LocalDate appointmentDate = LocalDate.parse(appointment.getDate(), dateFormatter);
+        LocalTime appointmentTime = LocalTime.parse(appointment.getTime(), timeFormatter);
 
-            return (appointmentDate.isBefore(LocalDate.now())) && (appointmentTime.isBefore(LocalTime.now()));
-        } catch (Exception e) {
-            System.err.println("Error validating appointment date and time: " + e.getMessage());
-            return false;
-        }
+        // Combine date and time into a single LocalDateTime for comparison
+        LocalDateTime appointmentDateTime = LocalDateTime.of(appointmentDate, appointmentTime);
+
+        // Compare with the current date and time
+        return appointmentDateTime.isBefore(LocalDateTime.now());
+    } catch (Exception e) {
+        // Log and handle invalid date/time formats
+        System.err.println("Error validating appointment date and time: " + e.getMessage());
+        return false;
     }
+}
+
 }

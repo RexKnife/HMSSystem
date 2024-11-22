@@ -33,7 +33,6 @@ public abstract class BaseDataHandler<T> {
             }
         }
     }
-
     /**
      * Writes all data in memory to the file, overwriting its contents.
      *

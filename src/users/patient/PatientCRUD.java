@@ -1,7 +1,9 @@
 package users.patient;
 
+import datamgmt.retrievers.MedicalRecordData;
 import datamgmt.retrievers.PatientData;
 import utils.enums.Gender;
+import utils.medicalrecords.MedicalRecord;
 import users.usermgmt.PasswordHasher;
 
 import java.io.IOException;
@@ -47,11 +49,17 @@ public class PatientCRUD {
         try {
             // Add the patient to the data repository
             data.addPatient(newPatient);
+
+            // Add a blank medical record for the patient
+            MedicalRecord newMedicalRecord = new MedicalRecord(patientID);
+            MedicalRecordData medicalRecordData = new MedicalRecordData();
+            medicalRecordData.addMedicalRecord(newMedicalRecord);
+
             // Display the generated Patient ID
             System.out.println("Patient added successfully. Generated Patient ID: " + patientID);
         } catch (IOException e) {
             // Handle any errors during the save process
-            System.err.println("Error saving patient: " + e.getMessage());
+            System.err.println("Error saving patient or medical record: " + e.getMessage());
         }
     }
 

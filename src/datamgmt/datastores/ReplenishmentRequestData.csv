@@ -1,11 +1,4 @@
 MedicineName,RequestedQuantity,Status,RequestBy,IsNewMedicine
-Amoxicillin,200,FULFILLED,P001,false
-KOOKIWA,100,FULFILLED,P001,false
-KOOKIWA,4,FULFILLED,P001,false
-Amoxicillin,13,FULFILLED,P001,false
-Amoxicillin,2,FULFILLED,P001,false
-Amoxicillin,23,FULFILLED,P001,false
-cough med,30,FULFILLED,P001,true
 Aspirin,200,PENDING,PH001,false
 Aspirin,200,PENDING,PH001,false
 Aspirin,200,PENDING,PH001,false
@@ -18,4 +11,6 @@ Aspirin,200,FULFILLED,PH001,false
 Albuterol,200,FULFILLED,PH001,true
 Ibuprofen,300,FULFILLED,PH004,false
 Ibudredp,2200,FULFILLED,PH005,true
-Ibuprofen,200,PENDING,PH006,false
+Ibuprofen,200,FULFILLED,PH006,false
+Ibuprofen,200,FULFILLED,PH006,false
+Ibuprofen,200,FULFILLED,PH006,false
